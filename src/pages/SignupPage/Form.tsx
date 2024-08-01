@@ -20,11 +20,19 @@ export const Form: React.FC<FormProps> = ({ setUser }) => {
   const [lastName, setLastName] = useState<string>('')
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubmit = useCallback(async () => {
     if (validateSignupFields(firstName, lastName, email, password)) {
-      await createUser({ firstName, lastName, email, password })
-      setUser({ firstName, lastName, email, password })
+      const user = await createUser({ firstName, lastName, email, password })
+      if (user) {
+        setUser(user)
+        setErrorMessage(null)
+      } else {
+        setErrorMessage('User already exists')
+      }
+    } else {
+      setErrorMessage('Invalid signup details')
     }
   }, [firstName, lastName, email, password, setUser])
 
@@ -67,30 +75,30 @@ export const Form: React.FC<FormProps> = ({ setUser }) => {
         setPassword={setPassword}
         {...styleProps}
       />
-      <Button
-        variant="contained"
-        onClick={handleSubmit}
-        disabled={!validateSignupFields(firstName, lastName, email, password)}
-      >
+      {errorMessage && (
+        <div id="error-message" style={{ color: 'red' }}>
+          {errorMessage}
+        </div>
+      )}
+      <Button variant="contained" onClick={handleSubmit}>
         {labels.submit}
       </Button>
     </form>
   )
 }
 
-const getLabels = (
-): {
+const getLabels = (): {
   firstName: string
   lastName: string
   email: string
   password: string
   submit: string
 } => {
-      return {
-        firstName: 'First name',
-        lastName: 'Last name',
-        email: 'Email',
-        password: 'Password',
-        submit: 'Submit',
-      }
+  return {
+    firstName: 'First name',
+    lastName: 'Last name',
+    email: 'Email',
+    password: 'Password',
+    submit: 'Submit',
   }
+}
