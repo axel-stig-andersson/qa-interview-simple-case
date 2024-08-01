@@ -55,7 +55,9 @@ export const Form: React.FC<FormProps> = ({ setUser }) => {
         {...styleProps}
       />
       {invalidCredentials && (
-        <div style={{ color: 'red' }}>Invalid credentials</div>
+        <div id="error-message" style={{ color: 'red' }}>
+          Invalid credentials
+        </div>
       )}
       <Button
         variant="contained"
