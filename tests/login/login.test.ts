@@ -1,29 +1,35 @@
 import { test, expect } from '@playwright/test'
 import { existingUsers } from '../../test-setup/localstorage.setup'
-
-test.describe.configure({ mode: 'serial' })
+import { LoginPage } from '../page-object-models/loginPage'
 
 test.describe('login form tests', () => {
-  test('logging in works with existing account', async ({ page }) => {
-    await page.goto('localhost:8080/login')
+  let loginPage: LoginPage
 
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page)
+    await loginPage.goto()
+  })
+
+  test('logging in works with existing account', async () => {
     const existingUser = existingUsers[0]
+    await loginPage.fillEmail(existingUser.email)
+    await loginPage.fillPassword(existingUser.password)
+    await loginPage.submit()
 
-    await page
-      .locator('#root form div:nth-child(1) > div > input')
-      .pressSequentially(existingUser.email)
+    // Wait for the logout button to be visible
+    const logoutVisible = await loginPage.isLogoutVisible()
+    expect(logoutVisible).toBe(true)
+  })
 
-    await page
-      .locator('#root form div:nth-child(2) > div > input')
-      .pressSequentially(existingUser.password)
+  test('invalid credentials displays error message', async () => {
+    await loginPage.fillEmail('invalid@mail.com')
+    await loginPage.fillPassword('invalidPassword')
+    await loginPage.submit()
 
-    // Submit button
-    const button = page.locator('form .MuiButton-sizeMedium')
-    // Click on the button
-    button.click()
+    const errorVisible = await loginPage.isErrorMessageVisible()
+    expect(errorVisible).toBe(true)
 
-    // Wait for 1 second until page is fully loaded
-    await page.waitForTimeout(1000)
-    await expect(page.getByText('Log out')).toBeVisible()
+    const errorMessage = await loginPage.getErrorMessageText()
+    expect(errorMessage).toBe('Invalid credentials')
   })
 })
